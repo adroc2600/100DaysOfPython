@@ -1,42 +1,25 @@
-from turtle import Turtle, Screen
-import random
-import time
+from menu import Menu
+from coffee_maker import CoffeeMaker
+from money_machine import MoneyMachine
+import sys
 
-from prettytable import PrettyTable
+my_menu = Menu()
+my_coffee_maker = CoffeeMaker()
+my_money_machine = MoneyMachine()
 
-# timmy = Turtle()
-# timmy.shape("turtle")
-# timmy.color("blue")
+while True: 
+    selection = input(f"What would you like? ({my_menu.get_items()}): ").lower()
+    if selection == "off":
+        sys.exit()
+    if selection == "report":
+        my_coffee_maker.report()
+    while selection != "latte" and drink != "espresso" and drink != "cappuccino":
+        selection = input(f"What would you like? ({my_menu.get_items()}): ").lower()
 
-# timmy.forward(100)
-# timmy.left(90)
-# timmy.forward(100)
-# timmy.left(90)
-# timmy.forward(100)
-# timmy.left(90)
-# timmy.forward(100)
+    drink = my_menu.find_drink(selection)
 
-# my_screen = Screen()
-# my_screen.exitonclick()
-
-align = ["l", "c", "r"]
-fields = ["City name", "Area", "Population", "Annual Rainfall"]
-
-table = PrettyTable()
-
-table.add_column(fields[0],
-["Adelaide","Brisbane","Darwin","Hobart","Sydney","Melbourne","Perth"])
-table.add_column(fields[1], [1295, 5905, 112, 1357, 2058, 1566, 5386])
-table.add_column(fields[2], [1158259, 1857594, 120900, 205556, 4336374, 3806092,
-1554769])
-table.add_column(fields[3],[600.5, 1146.4, 1714.7, 619.5, 1214.8, 646.9,
-869.4])
-
-while True:
-  print(table)
-  choice = random.choice(align)
-  table.align = choice
-  sort_by = random.choice(fields)
-  print(table.get_string(sortby=sort_by))
-  
-  time.sleep(1)
+    if not my_coffee_maker.is_resource_sufficient(drink):
+        sys.exit()
+        
+    if my_money_machine.make_payment(drink.cost):
+        my_coffee_maker.make_coffee(drink)

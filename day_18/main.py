@@ -1,30 +1,50 @@
-from question_model import Question
-from quiz_brain import QuizBrain
-import requests
-import html
+from turtle import Turtle, Screen
+from colors import rgb
+import random
+import threading
+import queue
 
-api_url = 'https://opentdb.com/api.php?amount=10&type=boolean'
-'''
-results:[{'type': 'boolean', 'difficulty': 'hard', 'category': 'Science: Computers', 'question': 'DHCP stands for Dynamic Host Configuration Port.', 'correct_answer': 'False', 'incorrect_answers': ['True']}
-'''
+DOT_COUNT = 10_000
+THREADS = 4
 
-question_bank = []
+dot_queue = queue.Queue()
 
-response = requests.get(api_url)
-#print(type(response))
+def generate_dots(n):
+    for _ in range(n):
+        dot_queue.put((
+            random.randint(-250, 70),
+            random.randint(-250, 190),
+            random.randint(1, 40),
+            random.choice(rgb)
+        ))
 
-response_json = response.json()
-#print(type(response_json))
+screen = Screen()
+screen.colormode(255)
 
-results = response_json["results"]
-#print(type(results))
+t = Turtle()
+t.hideturtle()
+t.speed(0)
+t.penup()
 
-for item in results:
-    question_bank.append(Question(html.unescape(item["question"]),item["correct_answer"]))
+threads = []
+per_thread = DOT_COUNT // THREADS
 
-quiz = QuizBrain(question_bank)
+for _ in range(THREADS):
+    th = threading.Thread(target=generate_dots, args=(per_thread,))
+    th.start()
+    threads.append(th)
 
-while quiz.still_has_questions():
-    quiz.next_question()
+screen.tracer(0)
 
-print(f"Your final score is {quiz.score}/{quiz.question_number}")
+drawn = 0
+while drawn < DOT_COUNT:
+    try:
+        x, y, size, color = dot_queue.get(timeout=0.01)
+        t.goto(x, y)
+        t.dot(size, color)
+        drawn += 1
+    except queue.Empty:
+        pass
+
+screen.update()
+screen.exitonclick()

@@ -1,25 +1,30 @@
-from menu import Menu
-from coffee_maker import CoffeeMaker
-from money_machine import MoneyMachine
-import sys
+from question_model import Question
+from quiz_brain import QuizBrain
+import requests
+import html
 
-my_menu = Menu()
-my_coffee_maker = CoffeeMaker()
-my_money_machine = MoneyMachine()
+api_url = 'https://opentdb.com/api.php?amount=10&type=boolean'
+'''
+results:[{'type': 'boolean', 'difficulty': 'hard', 'category': 'Science: Computers', 'question': 'DHCP stands for Dynamic Host Configuration Port.', 'correct_answer': 'False', 'incorrect_answers': ['True']}
+'''
 
-while True: 
-    selection = input(f"What would you like? ({my_menu.get_items()}): ").lower()
-    if selection == "off":
-        sys.exit()
-    if selection == "report":
-        my_coffee_maker.report()
-    while selection != "latte" and drink != "espresso" and drink != "cappuccino":
-        selection = input(f"What would you like? ({my_menu.get_items()}): ").lower()
+question_bank = []
 
-    drink = my_menu.find_drink(selection)
+response = requests.get(api_url)
+#print(type(response))
 
-    if not my_coffee_maker.is_resource_sufficient(drink):
-        sys.exit()
-        
-    if my_money_machine.make_payment(drink.cost):
-        my_coffee_maker.make_coffee(drink)
+response_json = response.json()
+#print(type(response_json))
+
+results = response_json["results"]
+#print(type(results))
+
+for item in results:
+    question_bank.append(Question(html.unescape(item["question"]),item["correct_answer"]))
+
+quiz = QuizBrain(question_bank)
+
+while quiz.still_has_questions():
+    quiz.next_question()
+
+print(f"Your final score is {quiz.score}/{quiz.question_number}")
